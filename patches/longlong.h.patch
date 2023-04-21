@@ -1,0 +1,13 @@
+diff --git a/mpi/longlong.h b/mpi/longlong.h
+index c299534..1272d0a 100644
+--- a/mpi/longlong.h
++++ b/mpi/longlong.h
+@@ -1543,7 +1543,7 @@ extern USItype __udiv_qrnnd ();
+ /***************************************
+  *********** s390x/zSeries  ************
+  ***************************************/
+-#if defined (__s390x__) && W_TYPE_SIZE == 64 && __GNUC__ >= 4
++#if defined (__s390x__) && W_TYPE_SIZE == 64 && __GNUC__ >= 4 && !defined(__MVS__)
+ # define add_ssaaaa(sh, sl, ah, al, bh, bl) \
+   __asm__ ("algr %1,%5\n"                                               \
+ 	   "alcgr %0,%3\n"                                              \
