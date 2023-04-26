@@ -1,5 +1,5 @@
 export ZOPEN_TARBALL_URL="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.2.tar.bz2"
-export ZOPEN_TARBALL_DEPS="make bzip2 tar curl perl automake autoconf m4 sed gettext zoslib diffutils libgpg"
+export ZOPEN_TARBALL_DEPS="make bzip2 tar curl perl automake autoconf m4 sed gettext zoslib diffutils libgpgerror"
 export ZOPEN_TYPE="TARBALL"
 export ZOPEN_EXTRA_LDFLAGS="${ZOPEN_EXTRA_LDFLAGS} -L\$LIBGPG_HOME/lib"
 export ZOPEN_EXTRA_LIBS="${ZOPEN_EXTRA_LIBS} -lgpg-error"
