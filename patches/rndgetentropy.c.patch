@@ -1,0 +1,18 @@
+diff --git a/random/rndgetentropy.c b/random/rndgetentropy.c
+index 513da0b..6382f52 100644
+--- a/random/rndgetentropy.c
++++ b/random/rndgetentropy.c
+@@ -95,8 +95,13 @@ _gcry_rndgetentropy_gather_random (void (*add)(const void*, size_t,
+                * RHEL kernel.
+                */
+               nbytes = length < 32 ? length : 32;
++             #ifdef __MVS__
++               ret = getentropy (buffer, nbytes);
++             #else
+               ret = getrandom (buffer, nbytes, GRND_RANDOM);
++             #endif 
+             }
++
+           else
+             {
+               nbytes = length < sizeof (buffer) ? length : sizeof (buffer);
