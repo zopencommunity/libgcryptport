@@ -1,8 +1,8 @@
 diff --git a/configure b/configure
-index bcdc185..bdad950 100755
+index 131114c..3384f35 100755
 --- a/configure
 +++ b/configure
-@@ -7217,6 +7217,10 @@ aix[4-9]*)
+@@ -7929,6 +7929,10 @@ aix[4-9]*)
    lt_cv_deplibs_check_method=pass_all
    ;;
  
@@ -13,3 +13,21 @@ index bcdc185..bdad950 100755
  beos*)
    lt_cv_deplibs_check_method=pass_all
    ;;
+@@ -19912,11 +19916,13 @@ then :
+   printf "%s\n" "#define HAVE_RAND 1" >>confdefs.h
+ 
+ fi
+-ac_fn_c_check_func "$LINENO" "mmap" "ac_cv_func_mmap"
+-if test "x$ac_cv_func_mmap" = xyes
+-then :
+-  printf "%s\n" "#define HAVE_MMAP 1" >>confdefs.h
+ 
++if [[ ! "$host_os" == *openedition* ]]; then
++  ac_fn_c_check_func "$LINENO" "mmap" "ac_cv_func_mmap"
++  if test "x$ac_cv_func_mmap" = xyes
++  then :
++    printf "%s\n" "#define HAVE_MMAP 1" >>confdefs.h
++  fi
+ fi
+ ac_fn_c_check_func "$LINENO" "getpagesize" "ac_cv_func_getpagesize"
+ if test "x$ac_cv_func_getpagesize" = xyes
