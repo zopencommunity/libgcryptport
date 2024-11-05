@@ -1,0 +1,14 @@
+diff --git a/src/secmem.c b/src/secmem.c
+index b36c44f..43b8e84 100644
+--- a/src/secmem.c
++++ b/src/secmem.c
+@@ -407,6 +407,9 @@ lock_pool_pages (void *p, size_t n)
+      * But don't complain, as explained above.  */
+   (void)p;
+   (void)n;
++#elif defined (__MVS__)
++  (void)p;
++  (void)n;
+ #else
+   (void)p;
+   (void)n;
