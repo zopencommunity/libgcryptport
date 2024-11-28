@@ -1,0 +1,13 @@
+diff --git a/doc/Makefile.in b/doc/Makefile.in
+index 33c687b..4ebc1a4 100644
+--- a/doc/Makefile.in
++++ b/doc/Makefile.in
+@@ -914,7 +914,7 @@ uninstall-man: uninstall-man1
+ 
+ 
+ yat2m$(EXEEXT_FOR_BUILD): yat2m.c
+-	$(CC_FOR_BUILD) $(CFLAGS_FOR_BUILD) $(LDFLAGS_FOR_BUILD) \
++	$(CC_FOR_BUILD) $(CFLAGS_FOR_BUILD) $(LDFLAGS_FOR_BUILD) $(LIBS) \
+ 	    $(CPPFLAGS_FOR_BUILD) -o $@ $(srcdir)/yat2m.c
+ 
+ .fig.png:
