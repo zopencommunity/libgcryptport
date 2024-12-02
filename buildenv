@@ -1,11 +1,11 @@
 # bump: libgcrypt-version /LIBGCRYPT_VERSION="(.*)"/ https://gnupg.org/ftp/gcrypt/libgcrypt/|re:/libgcrypt-([\d.]+).tar.bz2/$1/|semver:*
-LIBGCRYPT_VERSION="1.10.3"
+LIBGCRYPT_VERSION="1.11.0"
 
 export ZOPEN_STABLE_URL="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${LIBGCRYPT_VERSION}.tar.bz2"
 export ZOPEN_CATEGORIES="security library"
 export ZOPEN_STABLE_DEPS="make bzip2 tar curl perl automake autoconf m4 sed gettext zoslib diffutils libgpgerror openssl"
 export ZOPEN_BUILD_LINE="STABLE"
-export ZOPEN_EXTRA_CFLAGS="${ZOPEN_EXTRA_CFLAGS} -O3"
+export ZOPEN_EXTRA_CFLAGS="${ZOPEN_EXTRA_CFLAGS} -O0"
 export ZOPEN_COMP=CLANG
 
 zopen_check_results()
