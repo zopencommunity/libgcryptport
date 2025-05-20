@@ -1,5 +1,5 @@
 # bump: libgcrypt-version /LIBGCRYPT_VERSION="(.*)"/ https://gnupg.org/ftp/gcrypt/libgcrypt/|re:/libgcrypt-([\d.]+).tar.bz2/$1/|semver:*
-LIBGCRYPT_VERSION="1.11.0"
+LIBGCRYPT_VERSION="1.11.1"
 
 export ZOPEN_STABLE_URL="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${LIBGCRYPT_VERSION}.tar.bz2"
 export ZOPEN_CATEGORIES="security library"
