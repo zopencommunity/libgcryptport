@@ -2,11 +2,31 @@
 LIBGCRYPT_VERSION="1.11.1"
 
 export ZOPEN_STABLE_URL="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${LIBGCRYPT_VERSION}.tar.bz2"
+export ZOPEN_DEV_URL="https://github.com/gpg/libgcrypt.git"
 export ZOPEN_CATEGORIES="security library"
 export ZOPEN_STABLE_DEPS="make bzip2 tar curl perl automake autoconf m4 sed gettext zoslib diffutils libgpgerror openssl"
-export ZOPEN_BUILD_LINE="STABLE"
+export ZOPEN_DEV_DEPS="make bzip2 tar curl perl automake autoconf m4 sed gettext zoslib diffutils libgpgerror openssl libssh2 libpsl zlib"
+export ZOPEN_BUILD_LINE="DEV"
 export ZOPEN_EXTRA_CFLAGS="${ZOPEN_EXTRA_CFLAGS} -O0"
 export ZOPEN_COMP=CLANG
+
+zopen_post_buildenv()
+{
+  if [ "${ZOPEN_BUILD_LINE}x" = "DEVx" ]; then
+    export ZOPEN_BOOTSTRAP="./autogen.sh"
+    export ZOPEN_CONFIGURE_OPTS="--disable-doc"
+    export ZOPEN_COMP=OPENXL
+    export ZOPEN_SYSTEM_PREREQS="zos31"
+  fi
+}
+
+zopen_pre_patch()
+{
+if [ "${ZOPEN_BUILD_LINE}x" = "DEVx" ]; then
+  export CFLAGS="$CFLAGS -mzos-target=zosv3r1" 
+  export CXXFLAGS="$CXXFLAGS -mzos-target=zosv3r1" 
+fi
+}
 
 zopen_check_results()
 {
@@ -32,8 +52,7 @@ zopen_append_to_env()
 {
 cat <<ZZ
 if [ ! -z "\$ZOPEN_IN_ZOPEN_BUILD" ]; then
-  export ZOPEN_EXTRA_CFLAGS="\${ZOPEN_EXTRA_CFLAGS} -mzos-target=zosv2r5 -march=z13 -I\$PWD/include"
-  export ZOPEN_SYSTEM_PREREQS="zos25"
+  export ZOPEN_EXTRA_CFLAGS="\${ZOPEN_EXTRA_CFLAGS} -I\$PWD/include"
   export ZOPEN_EXTRA_CXXFLAGS="\${ZOPEN_EXTRA_CXXFLAGS} -I\$PWD/include"
   export ZOPEN_EXTRA_LDFLAGS="\${ZOPEN_EXTRA_LDFLAGS} -L\$PWD/lib"
   export ZOPEN_EXTRA_LIBS="\${ZOPEN_EXTRA_LIBS} -lgcrypt"

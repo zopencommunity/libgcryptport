@@ -1,0 +1,87 @@
+diff --git a/src/fips.c b/src/fips.c
+index 7ae8950..ada04d2 100644
+--- a/src/fips.c
++++ b/src/fips.c
+@@ -40,6 +40,10 @@
+ #include "cipher-proto.h"
+ #include "../random/random.h"
+ 
++#ifdef __MVS__
++#include <zos-tls.h>
++#endif
++
+ /* The states of the finite state machine used in fips mode.  */
+ enum module_states
+   {
+@@ -76,32 +80,71 @@ struct gcry_thread_context {
+ static __thread struct gcry_thread_context the_tc = {
+   0, GCRY_FIPS_FLAG_REJECT_DEFAULT
+ };
++#elif defined(__MVS__)
++struct gcry_thread_context *the_tc = NULL;
++static tls_t tls_the_tc;
+ #else
+ #error libgcrypt requires thread-local storage to support FIPS mode
+ #endif
++
++#ifdef __MVS__
++__attribute__((constructor))
++static void init_the_tc()
++{
++  tls_the_tc.sz = sizeof(struct gcry_thread_context);
++  the_tc = (struct gcry_thread_context *)__tlsValue(&tls_the_tc);
++  the_tc->fips_service_indicator = 0;
++  the_tc->flags_reject_non_fips = GCRY_FIPS_FLAG_REJECT_DEFAULT; 
++}
++#endif
++
+ 
+ void
+ _gcry_thread_context_set_reject (unsigned int flags)
+ {
++#ifdef __MVS__
++  tls_the_tc.sz = sizeof(struct gcry_thread_context);
++  the_tc = (struct gcry_thread_context *)__tlsValue(&tls_the_tc);
++  (*the_tc).flags_reject_non_fips = flags;
++#else
+   the_tc.flags_reject_non_fips = flags;
++#endif
+ }
+ 
+ int
+ _gcry_thread_context_check_rejection (unsigned int flag)
+ {
++#ifdef __MVS__
++  tls_the_tc.sz = sizeof(struct gcry_thread_context);
++  the_tc = (struct gcry_thread_context *)__tlsValue(&tls_the_tc);
++  return !!((*the_tc).flags_reject_non_fips & flag);
++#else
+   return !!(the_tc.flags_reject_non_fips & flag);
++#endif
+ }
+ 
+ void
+ _gcry_thread_context_set_fsi (unsigned long fsi)
+ {
++#ifdef __MVS__
++  tls_the_tc.sz = sizeof(struct gcry_thread_context);
++  the_tc = (struct gcry_thread_context *)__tlsValue(&tls_the_tc);
++  (*the_tc).fips_service_indicator = fsi;
++#else
+   the_tc.fips_service_indicator = fsi;
++#endif
+ }
+ 
+ unsigned long
+ _gcry_thread_context_get_fsi (void)
+ {
++#ifdef __MVS__
++  tls_the_tc.sz = sizeof(struct gcry_thread_context);
++  the_tc = (struct gcry_thread_context *)__tlsValue(&tls_the_tc);
++  return (*the_tc).fips_service_indicator;
++#else
+   return the_tc.fips_service_indicator;
++#endif
+ }
+ 
+ 

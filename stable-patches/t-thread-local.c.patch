@@ -1,0 +1,86 @@
+diff --git a/tests/t-thread-local.c b/tests/t-thread-local.c
+index 31ea45e..3baf1eb 100644
+--- a/tests/t-thread-local.c
++++ b/tests/t-thread-local.c
+@@ -31,6 +31,12 @@
+ #include <stdlib.h>
+ #include <string.h>
+ #include <errno.h>
++
++#ifdef __MVS__
++#define HAVE_PTHREAD 1
++#include <zos-tls.h>
++#endif
++
+ #if HAVE_PTHREAD
+ # include <pthread.h>
+ #endif
+@@ -58,7 +64,12 @@
+ 
+ #define N_THREADS 19
+ 
++#ifdef __MVS__
++unsigned long *tt = NULL;
++static tls_t tls_tt;
++#elif
+ static __thread unsigned long t;
++#endif
+ 
+ struct thread_arg_s
+ {
+@@ -71,9 +82,15 @@ static THREAD_RET_TYPE
+ check_ls_thread (void *argarg)
+ {
+   struct thread_arg_s *arg = argarg;
+-
++#ifdef __MVS__
++  tls_tt.sz = sizeof(unsigned long);
++  tt = (unsigned long *)__tlsValue(&tls_tt);
++  *tt = arg->no;
++  info ("a thread update the local storage: %lu\n", *tt);
++#else
+   t = arg->no;
+   info ("a thread update the local storage: %lu", t);
++#endif
+ 
+   gcry_free (arg);
+   return THREAD_RET_VALUE;
+@@ -84,7 +101,6 @@ static void
+ check_thread_local (void)
+ {
+   struct thread_arg_s *arg;
+-
+ #ifdef _WIN32
+   HANDLE threads[N_THREADS];
+   int i;
+@@ -116,7 +132,13 @@ check_thread_local (void)
+   pthread_t threads[N_THREADS];
+   int rc, i;
+ 
++#ifdef __MVS__
++  tls_tt.sz = sizeof(unsigned long);
++  tt = (unsigned long *)__tlsValue(&tls_tt);
++  *tt = N_THREADS;
++#else
+   t = N_THREADS;
++#endif
+   for (i=0; i < N_THREADS; i++)
+     {
+       arg = gcry_xmalloc (sizeof *arg);
+@@ -136,8 +158,16 @@ check_thread_local (void)
+ #else
+   (void)arg;
+ #endif /*!_WIN32*/
++
++#ifdef __MVS__
++  tls_tt.sz = sizeof(unsigned long);
++  tt = (unsigned long *)__tlsValue(&tls_tt);
++  if (*tt != N_THREADS)
++    fail ("failed t=%lu\n", *tt);
++#else
+   if (t != N_THREADS)
+     fail ("failed t=%lu\n", t);
++#endif
+   else
+     info ("success");
+ }

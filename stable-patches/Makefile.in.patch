@@ -1,0 +1,13 @@
+diff --git a/cipher/Makefile.in b/cipher/Makefile.in
+index 22358f4..3d73407 100644
+--- a/cipher/Makefile.in
++++ b/cipher/Makefile.in
+@@ -1544,7 +1544,7 @@ gost-sb.h: gost-s-box$(EXEEXT_FOR_BUILD)
+ 
+ gost-s-box$(EXEEXT_FOR_BUILD): gost-s-box.c
+ 	$(CC_FOR_BUILD) $(CFLAGS_FOR_BUILD) $(LDFLAGS_FOR_BUILD) \
+-	    $(CPPFLAGS_FOR_BUILD) -o $@ $(srcdir)/gost-s-box.c
++	    $(CPPFLAGS_FOR_BUILD) -o $@ $(srcdir)/gost-s-box.c $(LIBS)
+ 
+ # We need to lower the optimization for this module.
+ tiger.o: $(srcdir)/tiger.c Makefile

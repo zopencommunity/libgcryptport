@@ -1,0 +1,14 @@
+diff --git a/src/secmem.c b/src/secmem.c
+index 4e1d299..4128611 100644
+--- a/src/secmem.c
++++ b/src/secmem.c
+@@ -356,6 +356,9 @@ lock_pool_pages (void *p, size_t n)
+      * this whole Windows !@#$% and their user base are inherently insecure. */
+   (void)p;
+   (void)n;
++#elif defined (__MVS__)
++  (void)p;
++  (void)n;
+ #else
+   (void)p;
+   (void)n;

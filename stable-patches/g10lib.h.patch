@@ -1,0 +1,17 @@
+diff --git a/src/g10lib.h b/src/g10lib.h
+index adf03e8..e8a3aeb 100644
+--- a/src/g10lib.h
++++ b/src/g10lib.h
+@@ -40,11 +40,9 @@
+ #include "types.h"
+ 
+ 
+-
+-
+ /* Attribute handling macros.  */
+ 
+-#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 5 )
++#if ((__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 5 )) && ! defined (__MVS__)) 
+ #define JNLIB_GCC_M_FUNCTION 1
+ #define JNLIB_GCC_A_NR 	     __attribute__ ((__noreturn__))
+ #define JNLIB_GCC_A_PRINTF( f, a )  __attribute__ ((format (printf,f,a)))
