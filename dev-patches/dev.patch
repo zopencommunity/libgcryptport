@@ -11,6 +11,52 @@ index 2e129ca..72fa301 100644
  
  
  if ENABLE_O_FLAG_MUNGING
+diff --git a/configure.ac b/configure.ac
+index 7526d93..44d00b4 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -235,6 +235,7 @@ LIBGCRYPT_THREAD_MODULES=""
+ 
+ # Other definitions.
+ have_w32_system=no
++have_mvs_system=no
+ have_pthread=no
+ 
+ 
+@@ -289,6 +290,11 @@ case "${host}" in
+                   [defined if we use posix_spawn in test program])
+         AC_CHECK_HEADERS(spawn.h)
+         ;;
++    *-openedition*)
++        have_mvs_system=yes
++	# The z/OS C runtime includes pthread support, and linking is handled automatically at build time.
++        have_pthread=yes
++        ;;
+     *)
+       ;;
+ esac
+@@ -298,6 +304,10 @@ if test "$have_w32_system" = yes; then
+ fi
+ AM_CONDITIONAL(HAVE_W32_SYSTEM, test "$have_w32_system" = yes)
+ 
++if test "$have_mvs_system" = yes; then
++   AC_DEFINE(HAVE_MVS_SYSTEM,1, [Defined if we run on a IBM z/OS system])
++fi
++AM_CONDITIONAL(HAVE_MVS_SYSTEM, test "$have_mvs_system" = yes)
+ 
+ # A printable OS Name is sometimes useful.
+ case "${host}" in
+@@ -317,6 +327,10 @@ case "${host}" in
+         PRINTABLE_OS_NAME="GNU/Linux"
+         ;;
+ 
++    *-openedition*)
++        PRINTABLE_OS_NAME="IBM z/OS"
++        ;;
++
+     *)
+         PRINTABLE_OS_NAME=`uname -s || echo "Unknown"`
+         ;;
 diff --git a/doc/Makefile.am b/doc/Makefile.am
 index 2501e5d..a0a93b4 100644
 --- a/doc/Makefile.am
@@ -40,7 +86,7 @@ index 102e884..d4b5274 100644
    lt_cv_deplibs_check_method=pass_all
    ;;
 diff --git a/mpi/longlong.h b/mpi/longlong.h
-index 7dc6759..71c292c 100644
+index 7dc6759..8a61bc9 100644
 --- a/mpi/longlong.h
 +++ b/mpi/longlong.h
 @@ -28,7 +28,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
@@ -48,7 +94,7 @@ index 7dc6759..71c292c 100644
  
  /* On 64-bit, use 128-bit 'unsigned __int128' for UDWtype, if available. */
 -#if !defined (UDWtype) && SIZEOF_UNSIGNED___INT128 * 8 == W_TYPE_SIZE * 2
-+#if ((!defined (UDWtype)) && ((SIZEOF_UNSIGNED___INT128 * 8) == (W_TYPE_SIZE * 2)) && (!defined(__MVS__)))
++#if ((!defined (UDWtype)) && ((SIZEOF_UNSIGNED___INT128 * 8) == (W_TYPE_SIZE * 2)) && (!defined(HAVE_MVS_SYSTEM)))
  #  define UDWtype unsigned __int128
  #endif
  
@@ -57,28 +103,12 @@ index 7dc6759..71c292c 100644
   *********** s390x/zSeries  ************
   ***************************************/
 -#if defined (__s390x__) && W_TYPE_SIZE == 64 && __GNUC__ >= 4
-+#if defined (__s390x__) && W_TYPE_SIZE == 64 && __GNUC__ >= 4 && !defined(__MVS__)
++#if defined (__s390x__) && W_TYPE_SIZE == 64 && __GNUC__ >= 4 && !defined(HAVE_MVS_SYSTEM)
  # define add_ssaaaa(sh, sl, ah, al, bh, bl) \
    __asm__ ("algr %1,%5\n"                                               \
  	   "alcgr %0,%3\n"                                              \
-diff --git a/random/rndgetentropy.c b/random/rndgetentropy.c
-index a6f3c4a..c8125fc 100644
---- a/random/rndgetentropy.c
-+++ b/random/rndgetentropy.c
-@@ -96,7 +96,11 @@ _gcry_rndgetentropy_gather_random (void (*add)(const void*, size_t,
-                * RHEL kernel.
-                */
-               nbytes = length < 32 ? length : 32;
-+#ifdef __MVS__
-+	      ret = getentropy (buffer, nbytes);
-+#else
-               ret = getrandom (buffer, nbytes, GRND_RANDOM);
-+#endif
-             }
-           else
- #endif
 diff --git a/src/g10lib.h b/src/g10lib.h
-index 84ec471..e4e1008 100644
+index 84ec471..7482f03 100644
 --- a/src/g10lib.h
 +++ b/src/g10lib.h
 @@ -44,7 +44,7 @@
@@ -86,19 +116,19 @@ index 84ec471..e4e1008 100644
  /* Attribute handling macros.  */
  
 -#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 5 )
-+#if ((__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 5 )) && ! defined (__MVS__))
++#if ((__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 5 )) && !defined(HAVE_MVS_SYSTEM))
  #define JNLIB_GCC_M_FUNCTION 1
  #define JNLIB_GCC_A_NR 	     __attribute__ ((__noreturn__))
  #define JNLIB_GCC_A_PRINTF( f, a )  __attribute__ ((format (printf,f,a)))
 diff --git a/src/secmem.c b/src/secmem.c
-index 4e1d299..4128611 100644
+index 4e1d299..8506a1b 100644
 --- a/src/secmem.c
 +++ b/src/secmem.c
 @@ -356,6 +356,9 @@ lock_pool_pages (void *p, size_t n)
       * this whole Windows !@#$% and their user base are inherently insecure. */
    (void)p;
    (void)n;
-+#elif defined (__MVS__)
++#elif defined (HAVE_MVS_SYSTEM)
 +  (void)p;
 +  (void)n;
  #else
