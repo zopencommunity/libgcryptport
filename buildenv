@@ -5,9 +5,10 @@ export ZOPEN_STABLE_URL="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${LIBG
 export ZOPEN_DEV_URL="https://github.com/gpg/libgcrypt.git"
 export ZOPEN_CATEGORIES="security library"
 export ZOPEN_STABLE_DEPS="make bzip2 tar curl perl automake autoconf m4 sed gettext zoslib diffutils libgpgerror openssl"
-export ZOPEN_DEV_DEPS="make bzip2 tar curl perl automake autoconf m4 sed gettext zoslib diffutils libgpgerror openssl libssh2 libpsl zlib"
+export ZOPEN_DEV_DEPS="make bzip2 tar curl perl automake autoconf m4 sed gettext zoslib diffutils libgpgerror openssl libssh2 libpsl zlib pkgconfig"
 export ZOPEN_BUILD_LINE="DEV"
-export ZOPEN_EXTRA_CFLAGS="${ZOPEN_EXTRA_CFLAGS} -O0"
+export ZOPEN_EXTRA_CFLAGS="${ZOPEN_EXTRA_CFLAGS} -O0 -mzos-sys-include=/usr/include"
+export ZOPEN_EXTRA_LDFLAGS="-mzos-hlq-le=CEE -mzos-hlq-clang=CEE"
 export ZOPEN_COMP=CLANG
 
 zopen_post_buildenv()
@@ -17,6 +18,7 @@ zopen_post_buildenv()
     export ZOPEN_CONFIGURE_OPTS="--disable-doc"
     export ZOPEN_COMP=OPENXL
     export ZOPEN_SYSTEM_PREREQS="zos31"
+    export ZOPEN_EXTRA_CFLAGS="${ZOPEN_EXTRA_CFLAGS} -O0 -mzos-sys-include=/usr/include"
   fi
 }
 

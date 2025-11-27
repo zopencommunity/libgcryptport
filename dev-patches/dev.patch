@@ -1,52 +1,40 @@
 diff --git a/cipher/Makefile.am b/cipher/Makefile.am
-index 2e129ca..72fa301 100644
+index bbcd518..fc8966f 100644
 --- a/cipher/Makefile.am
 +++ b/cipher/Makefile.am
-@@ -170,7 +170,7 @@ gost-sb.h: gost-s-box$(EXEEXT_FOR_BUILD)
+@@ -175,7 +175,7 @@ gost-sb.h: gost-s-box$(EXEEXT_FOR_BUILD)
  
  gost-s-box$(EXEEXT_FOR_BUILD): gost-s-box.c
  	$(CC_FOR_BUILD) $(CFLAGS_FOR_BUILD) $(LDFLAGS_FOR_BUILD) \
 -	    $(CPPFLAGS_FOR_BUILD) -o $@ $(srcdir)/gost-s-box.c
-+	    $(CPPFLAGS_FOR_BUILD) -o $@ $(srcdir)/gost-s-box.c $(LIBS)
++	    $(CPPFLAGS_FOR_BUILD) -o $@ $(srcdir)/gost-s-box.c $(EXTRA_LIBS_FOR_BUILD)
  
  
  if ENABLE_O_FLAG_MUNGING
 diff --git a/configure.ac b/configure.ac
-index 7526d93..44d00b4 100644
+index f5e7807..c707016 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -235,6 +235,7 @@ LIBGCRYPT_THREAD_MODULES=""
- 
- # Other definitions.
- have_w32_system=no
-+have_mvs_system=no
- have_pthread=no
- 
- 
-@@ -289,6 +290,11 @@ case "${host}" in
+@@ -290,6 +290,10 @@ case "${host}" in
                    [defined if we use posix_spawn in test program])
          AC_CHECK_HEADERS(spawn.h)
          ;;
 +    *-openedition*)
-+        have_mvs_system=yes
-+	# The z/OS C runtime includes pthread support, and linking is handled automatically at build time.
++	      # The z/OS C runtime includes pthread support, and linking is handled automatically at build time.
 +        have_pthread=yes
 +        ;;
      *)
        ;;
  esac
-@@ -298,6 +304,10 @@ if test "$have_w32_system" = yes; then
+@@ -299,7 +303,6 @@ if test "$have_w32_system" = yes; then
  fi
  AM_CONDITIONAL(HAVE_W32_SYSTEM, test "$have_w32_system" = yes)
  
-+if test "$have_mvs_system" = yes; then
-+   AC_DEFINE(HAVE_MVS_SYSTEM,1, [Defined if we run on a IBM z/OS system])
-+fi
-+AM_CONDITIONAL(HAVE_MVS_SYSTEM, test "$have_mvs_system" = yes)
- 
+-
  # A printable OS Name is sometimes useful.
  case "${host}" in
-@@ -317,6 +327,10 @@ case "${host}" in
+     *-*-mingw32*)
+@@ -318,11 +321,29 @@ case "${host}" in
          PRINTABLE_OS_NAME="GNU/Linux"
          ;;
  
@@ -57,8 +45,41 @@ index 7526d93..44d00b4 100644
      *)
          PRINTABLE_OS_NAME=`uname -s || echo "Unknown"`
          ;;
+ esac
+ 
++# Set some variables for build platform helpers.
++
++case "$build_os" in
++    *openedition*)
++        PKG_CHECK_MODULES([ZOSLIB], [zoslib],
++                          [EXTRA_LIBS_FOR_BUILD="$ZOSLIB_LIBS"],
++                          [AC_MSG_ERROR([zoslib not found. Please ensure zoslib.pc is in PKG_CONFIG_PATH.])])
++         ;;
++    *)
++        EXTRA_LIBS_FOR_BUILD=""
++	;;
++esac
++AC_SUBST(EXTRA_LIBS_FOR_BUILD)
++
+ NAME_OF_DEV_RANDOM="/dev/random"
+ NAME_OF_DEV_URANDOM="/dev/urandom"
+ 
+@@ -3029,6 +3050,13 @@ AC_CHECK_FUNCS(stpcpy strcasecmp)
+ # We have replacements for these in src/g10lib.h
+ AC_CHECK_FUNCS(strtoul memmove stricmp atexit raise)
+ # Other checks
++case "$host_os" in
++    *openedition*)
++        # mmap is not fully supported on z/os.
++        ac_cv_func_mmap=no
++        ;;
++esac
++
+ AC_CHECK_FUNCS(strerror rand mmap getpagesize sysconf waitpid wait4)
+ AC_CHECK_FUNCS(gettimeofday getrusage gethrtime clock_gettime syslog)
+ AC_CHECK_FUNCS(syscall fcntl ftruncate flockfile getauxval elf_aux_info)
 diff --git a/doc/Makefile.am b/doc/Makefile.am
-index 2501e5d..a0a93b4 100644
+index 2501e5d..f543270 100644
 --- a/doc/Makefile.am
 +++ b/doc/Makefile.am
 @@ -40,7 +40,7 @@ myman_pages   = hmac256.1
@@ -66,7 +87,7 @@ index 2501e5d..a0a93b4 100644
  
  yat2m$(EXEEXT_FOR_BUILD): yat2m.c
 -	$(CC_FOR_BUILD) $(CFLAGS_FOR_BUILD) $(LDFLAGS_FOR_BUILD) \
-+	$(CC_FOR_BUILD) $(CFLAGS_FOR_BUILD) $(LDFLAGS_FOR_BUILD) $(LIBS) \
++	$(CC_FOR_BUILD) $(CFLAGS_FOR_BUILD) $(LDFLAGS_FOR_BUILD) $(EXTRA_LIBS_FOR_BUILD) \
  	    $(CPPFLAGS_FOR_BUILD) -o $@ $(srcdir)/yat2m.c
  
  .fig.png:
@@ -86,49 +107,28 @@ index 102e884..d4b5274 100644
    lt_cv_deplibs_check_method=pass_all
    ;;
 diff --git a/mpi/longlong.h b/mpi/longlong.h
-index 7dc6759..8a61bc9 100644
+index 9e60592..46de33a 100644
 --- a/mpi/longlong.h
 +++ b/mpi/longlong.h
-@@ -28,7 +28,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
- #endif
- 
- /* On 64-bit, use 128-bit 'unsigned __int128' for UDWtype, if available. */
--#if !defined (UDWtype) && SIZEOF_UNSIGNED___INT128 * 8 == W_TYPE_SIZE * 2
-+#if ((!defined (UDWtype)) && ((SIZEOF_UNSIGNED___INT128 * 8) == (W_TYPE_SIZE * 2)) && (!defined(HAVE_MVS_SYSTEM)))
- #  define UDWtype unsigned __int128
- #endif
- 
-@@ -1505,7 +1505,7 @@ extern USItype __udiv_qrnnd ();
+@@ -1505,7 +1505,7 @@ extern USItype __udiv_qrnnd (USItype *, USItype, USItype, USItype);
  /***************************************
   *********** s390x/zSeries  ************
   ***************************************/
 -#if defined (__s390x__) && W_TYPE_SIZE == 64 && __GNUC__ >= 4
-+#if defined (__s390x__) && W_TYPE_SIZE == 64 && __GNUC__ >= 4 && !defined(HAVE_MVS_SYSTEM)
++#if defined (__s390x__) && !defined (__MVS__) && W_TYPE_SIZE == 64 && __GNUC__ >= 4
  # define add_ssaaaa(sh, sl, ah, al, bh, bl) \
    __asm__ ("algr %1,%5\n"                                               \
  	   "alcgr %0,%3\n"                                              \
-diff --git a/src/g10lib.h b/src/g10lib.h
-index 84ec471..7482f03 100644
---- a/src/g10lib.h
-+++ b/src/g10lib.h
-@@ -44,7 +44,7 @@
- 
- /* Attribute handling macros.  */
- 
--#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 5 )
-+#if ((__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 5 )) && !defined(HAVE_MVS_SYSTEM))
- #define JNLIB_GCC_M_FUNCTION 1
- #define JNLIB_GCC_A_NR 	     __attribute__ ((__noreturn__))
- #define JNLIB_GCC_A_PRINTF( f, a )  __attribute__ ((format (printf,f,a)))
 diff --git a/src/secmem.c b/src/secmem.c
-index 4e1d299..8506a1b 100644
+index 19cf1ad..7c5cac7 100644
 --- a/src/secmem.c
 +++ b/src/secmem.c
-@@ -356,6 +356,9 @@ lock_pool_pages (void *p, size_t n)
+@@ -365,6 +365,10 @@ lock_pool_pages (void *p, size_t n)
       * this whole Windows !@#$% and their user base are inherently insecure. */
    (void)p;
    (void)n;
-+#elif defined (HAVE_MVS_SYSTEM)
++#elif defined (__MVS__)
++  /* On z/OS secure memory locking is not implemented */
 +  (void)p;
 +  (void)n;
  #else
