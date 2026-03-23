@@ -8,6 +8,7 @@ export ZOPEN_BUILD_LINE="STABLE"
 export ZOPEN_EXTRA_CFLAGS="${ZOPEN_EXTRA_CFLAGS} -O0 -mzos-target=zosv2r5 -march=z13"
 export ZOPEN_SYSTEM_PREREQS="zos25"
 export ZOPEN_COMP=CLANG
+export ZOPEN_RUNTIME_DEPS="libgpgerror"
 
 zopen_check_results()
 {
